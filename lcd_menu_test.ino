@@ -133,13 +133,6 @@ void resolveInputFlags() {
 }
 
 void inputAction(int input) {
-  //Serial.println(currentScreen);
-  //if (currentScreen == 3) {
-  //  Serial.println(currentScreen);
-  //  if(input == 2) { lcd.setCursor(0,1); lcd.print("No"); } 
-  //  else if(input == 3) { lcd.setCursor(0,1); lcd.print("Yes"); }
-  //}
-
   if(input == 0) {
     if (currentScreen == 0) { currentScreen = 0; } 
     else { currentScreen--; }
@@ -153,12 +146,19 @@ void inputAction(int input) {
 }
 
 void parameterChange(int key) {
+  Serial.println(currentScreen);
   if(key == 0) {
+    if (currentScreen == numOfScreens-1) { 
+      //printSaveScreen(0);
+    }
     if (parameters[currentScreen] < parameterCheck[currentScreen][1]) { 
       parameters[currentScreen] = parameters[currentScreen] + parameterCheck[currentScreen][2]; 
     }
   }
   else if(key == 1) {
+    if (currentScreen == numOfScreens-1) { 
+      //printSaveScreen(1);
+    }
     if (parameters[currentScreen] > parameterCheck[currentScreen][0]) { 
       parameters[currentScreen] = parameters[currentScreen]- parameterCheck[currentScreen][2];
     }
@@ -170,9 +170,9 @@ void saveEeprom(int key){ ; }
 void printScreen() {
   lcd.clear();
   lcd.print(screens[currentScreen][0]);
-  lcd.setCursor(0,1);
-  if (currentScreen == numOfScreens-1) { lcd.print("No"); }
-  else { lcd.print(parameters[currentScreen]);
+  if (currentScreen != numOfScreens-1) {
+    lcd.setCursor(0,1);
+    lcd.print(parameters[currentScreen]);
     lcd.print(" ");
     lcd.print(screens[currentScreen][1]);
   }
