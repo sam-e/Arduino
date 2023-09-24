@@ -29,7 +29,8 @@ float parameterCheck[numOfScreens][3] =
   {{ 3.7, 4.2, 0.01  },  // end discharge 
    { 1.0, 10.0, 0.5  },  // discharge amps 
    { 0.0, 120.0, 1.0 },  // Timer
-   { 0.0, 65.0, 1.0  }};  // Temperature 
+   { 0.0, 65.0, 1.0  },  // Temperature 
+   { 0.0, 1.0, 1.0   }};  
    
 //--EEPROM
 int eeAddress[numOfScreens];// = { 1, 32, 63, 95 };
@@ -56,10 +57,12 @@ void setup() {
 
   //EEPROM.put(eeAddress, eeprom);
   if (!eepromFlag) {
+    Serial.print("Writing EEPROM Parameters:");
     parameters[0] = 3.80;
     parameters[1] = 5.0;
     parameters[2] = 10.0;
     parameters[3] = 50.0;
+    parameters[4] = 0.0;
 
     for (int i = 0; i <= numOfScreens; i++) {
       EEPROM.put(eeAddress[i], parameters[i]);
@@ -146,21 +149,20 @@ void inputAction(int input) {
 }
 
 void parameterChange(int key) {
-  Serial.println(currentScreen);
+  Serial.print(" ");
+  Serial.print(currentScreen);
+  Serial.print(" ");
+  Serial.print(parameterCheck[currentScreen][0]);
+  Serial.print(" ");
+  Serial.print(parameters[currentScreen]);
   if(key == 0) {
-    if (currentScreen == numOfScreens-1) { 
-      //printSaveScreen(0);
-    }
     if (parameters[currentScreen] < parameterCheck[currentScreen][1]) { 
       parameters[currentScreen] = parameters[currentScreen] + parameterCheck[currentScreen][2]; 
     }
   }
   else if(key == 1) {
-    if (currentScreen == numOfScreens-1) { 
-      //printSaveScreen(1);
-    }
     if (parameters[currentScreen] > parameterCheck[currentScreen][0]) { 
-      parameters[currentScreen] = parameters[currentScreen]- parameterCheck[currentScreen][2];
+      parameters[currentScreen] = parameters[currentScreen] - parameterCheck[currentScreen][2];
     }
   }
 }
@@ -168,6 +170,7 @@ void parameterChange(int key) {
 void saveEeprom(int key){ ; }
 
 void printScreen() {
+  //Serial.println(parameters[currentScreen]);
   lcd.clear();
   lcd.print(screens[currentScreen][0]);
   if (currentScreen != numOfScreens-1) {
@@ -175,5 +178,13 @@ void printScreen() {
     lcd.print(parameters[currentScreen]);
     lcd.print(" ");
     lcd.print(screens[currentScreen][1]);
+  }
+  else if (parameters[currentScreen] == 0.0) {
+    lcd.setCursor(0,1);
+    lcd.print("No ");
+  }
+  else if (parameters[currentScreen] == 1.0) {
+    lcd.setCursor(0,1);
+    lcd.print("Yes ");
   }
 }
