@@ -21,7 +21,7 @@ String screens[numOfScreens][2] =
    {"Dis. Current:", "Amps"  }, 
    {"Timer:", "Mins"         },
    {"Overload Temp:", "degC" },
-   {"Save Paramaters:", "" }};
+   {"Save Paramaters:", ""   }};
 
 //--Device parameters
 float parameters[numOfScreens];
@@ -30,12 +30,13 @@ float parameterCheck[numOfScreens][3] =
    { 1.0, 10.0, 0.5  },  // discharge amps 
    { 0.0, 120.0, 1.0 },  // Timer
    { 0.0, 65.0, 1.0  },  // Temperature 
-   { 0.0, 1.0, 1.0   }};  
+   { 0, 1, 1         }};  
    
 //--EEPROM
 int eeAddress[numOfScreens];// = { 1, 32, 63, 95 };
 bool eepromFlag = 1;
 //int eeFlagAddress = 0;
+bool debugFlag = 1;
 
 
 void setup() {
@@ -49,7 +50,7 @@ void setup() {
     ; // wait for serial port to connect
   }
   
-  for (int i = 0; i <= numOfScreens; i++) {
+  for (int i = 0; i < numOfScreens; i++) {
     int n = 32;
     if (i == 0) { eeAddress[i] = 1; }
     else { eeAddress[i] = i * n; }
@@ -57,15 +58,16 @@ void setup() {
 
   //EEPROM.put(eeAddress, eeprom);
   if (!eepromFlag) {
-    Serial.print("Writing EEPROM Parameters:");
+    Serial.println("Writing EEPROM Parameters:");
     parameters[0] = 3.80;
     parameters[1] = 5.0;
     parameters[2] = 10.0;
     parameters[3] = 50.0;
-    parameters[4] = 0.0;
+    parameters[4] = +0.0; // 0.0 is different to +0.0 and -0.0
 
-    for (int i = 0; i <= numOfScreens; i++) {
+    for (int i = 0; i < numOfScreens; i++) {
       EEPROM.put(eeAddress[i], parameters[i]);
+      Serial.println(i);
     }
   }
 
@@ -95,7 +97,7 @@ void loop() {
 int keystate() {     //read key value
   int val = analogRead(A0);
   if (val > 1000) { return 100;    } //no key
-  else if (val > 800)  { return 5; } //select
+  else if (val > 800)  { return 4; } //select
   else if (val > 600)  { return 0; } //left
   else if (val > 400)  { return 3; } //down
   else if (val > 200)  { return 2; } //up
@@ -104,7 +106,7 @@ int keystate() {     //read key value
 
 void setInputFlags() {
   int key = keystate();
-  //if (debug) { Serial.println(key); }
+  //if (debugFlag) { Serial.println(key); }
 
   for(int i = 0; i < numOfInputs; i++) {
     int reading;
@@ -136,6 +138,7 @@ void resolveInputFlags() {
 }
 
 void inputAction(int input) {
+  if (debugFlag) { Serial.println(input); }
   if(input == 0) {
     if (currentScreen == 0) { currentScreen = 0; } 
     else { currentScreen--; }
@@ -146,15 +149,24 @@ void inputAction(int input) {
   } 
   else if(input == 2) { parameterChange(0); } 
   else if(input == 3) { parameterChange(1); }
+  else if(input == 4) {
+    if (currentScreen == numOfScreens-1) {
+      Serial.println("Enter");
+      for (int i = 0; i < numOfScreens; i++) {
+        EEPROM.put(eeAddress[i], parameters[i]);
+        Serial.println(i);
+      }
+    }
+  }
 }
 
 void parameterChange(int key) {
-  Serial.print(" ");
-  Serial.print(currentScreen);
-  Serial.print(" ");
-  Serial.print(parameterCheck[currentScreen][0]);
-  Serial.print(" ");
-  Serial.print(parameters[currentScreen]);
+  //Serial.print(" ");
+  //Serial.print(currentScreen);
+  //Serial.print(" ");
+  //Serial.print(parameterCheck[currentScreen][0]);
+  //Serial.print(" ");
+  //Serial.print(parameters[currentScreen]);
   if(key == 0) {
     if (parameters[currentScreen] < parameterCheck[currentScreen][1]) { 
       parameters[currentScreen] = parameters[currentScreen] + parameterCheck[currentScreen][2]; 
