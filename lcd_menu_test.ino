@@ -5,7 +5,7 @@
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 
 //--Input & Button Logic
-const int numOfInputs = 5;
+const int numOfInputs = 6;
 //const int inputPins[numOfInputs] = {8,9,10,11,11};
 int inputState[numOfInputs];
 int lastInputState[numOfInputs] = { LOW,LOW,LOW,LOW,LOW };
@@ -14,13 +14,14 @@ long lastDebounceTime[numOfInputs] = { 0,0,0,0,0 };
 long debounceDelay = 5;
 
 //--LCD Menu Logic
-const int numOfScreens = 5;
+const int numOfScreens = 6;
 int currentScreen = 0;
 String screens[numOfScreens][2] = 
   {{"End Voltage:", "Volts"  }, 
    {"Dis. Current:", "Amps"  }, 
    {"Timer:", "Mins"         },
    {"Overload Temp:", "degC" },
+   {"Start Discharge:", ""   },
    {"Save Paramaters:", ""   }};
 
 //--Device parameters
@@ -30,7 +31,8 @@ float parameterCheck[numOfScreens][3] =
    { 1.0, 10.0, 0.5  },  // discharge amps 
    { 0.0, 120.0, 1.0 },  // Timer
    { 0.0, 65.0, 1.0  },  // Temperature 
-   { 0, 1, 1         }};  
+   { 0, 1, 1         },  // Start stop 
+   { 0, 1, 1         }}; // Save parameters
    
 //--EEPROM
 int eeAddress[numOfScreens];// = { 1, 32, 63, 95 };
@@ -151,22 +153,16 @@ void inputAction(int input) {
   else if(input == 3) { parameterChange(1); }
   else if(input == 4) {
     if (currentScreen == numOfScreens-1) {
-      Serial.println("Enter");
-      for (int i = 0; i < numOfScreens; i++) {
-        EEPROM.put(eeAddress[i], parameters[i]);
-        Serial.println(i);
-      }
+      saveToEeprom();
+    }
+    else if (currentScreen == numOfScreens-2) {
+      discharge();
     }
   }
 }
 
+
 void parameterChange(int key) {
-  //Serial.print(" ");
-  //Serial.print(currentScreen);
-  //Serial.print(" ");
-  //Serial.print(parameterCheck[currentScreen][0]);
-  //Serial.print(" ");
-  //Serial.print(parameters[currentScreen]);
   if(key == 0) {
     if (parameters[currentScreen] < parameterCheck[currentScreen][1]) { 
       parameters[currentScreen] = parameters[currentScreen] + parameterCheck[currentScreen][2]; 
@@ -179,13 +175,26 @@ void parameterChange(int key) {
   }
 }
 
-void saveEeprom(int key){ ; }
+void saveToEeprom() { 
+  if (parameters[currentScreen] == 1.0)  {
+    for (int i = 0; i < numOfScreens-2; i++) {
+      EEPROM.put(eeAddress[i], parameters[i]);
+    }
+  }
+}
+
+
+void discharge() {
+  if (parameters[currentScreen] == 1.0)  {
+    Serial.println("Discharging");
+  }
+}
 
 void printScreen() {
   //Serial.println(parameters[currentScreen]);
   lcd.clear();
   lcd.print(screens[currentScreen][0]);
-  if (currentScreen != numOfScreens-1) {
+  if (currentScreen < numOfScreens-2) {
     lcd.setCursor(0,1);
     lcd.print(parameters[currentScreen]);
     lcd.print(" ");
